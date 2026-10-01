@@ -1,0 +1,112 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Editor overlay</title>
+<style>
+  html, body {
+    margin: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    font: 13px system-ui, sans-serif;
+    user-select: none;
+    overflow: hidden;
+  }
+  .bar {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px;
+    background: rgba(24, 24, 28, 0.85);
+    color: #ddd;
+    border-radius: 8px;
+  }
+  button {
+    background: #333;
+    color: #ddd;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+  }
+  button.on {
+    background: #4a7;
+    color: #fff;
+    border-color: #4a7;
+  }
+  .dot {
+    margin-left: 6px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #a44;
+  }
+  .dot.on {
+    background: #4a7;
+  }
+</style>
+</head>
+<body>
+<div class="bar" id="bar">
+  <button data-mode="1">solid</button>
+  <button data-mode="2">textured</button>
+  <button data-mode="0" class="on">lit</button>
+  <div class="dot" id="dot" title="disconnected"></div>
+</div>
+<script>
+  const dot = document.getElementById('dot');
+  const bar = document.getElementById('bar');
+  const buttons = [...document.querySelectorAll('button')];
+  if (!window.ui) {
+    dot.title = 'preload did not run';
+  } else {
+    for (const b of buttons) {
+      b.addEventListener('click', () => {
+        for (const o of buttons) o.classList.toggle('on', o === b);
+        window.ui.mode(Number(b.dataset.mode));
+      });
+    }
+    window.ui.onState((s) => {
+      dot.classList.toggle('on', s === 'connected');
+      dot.title = s;
+    });
+
+    const look = 0.004;
+    const step = 0.03;
+    const steps = {
+      KeyW: [1, 0, 0], KeyS: [-1, 0, 0],
+      KeyD: [0, 1, 0], KeyA: [0, -1, 0],
+      KeyE: [0, 0, 1], KeyQ: [0, 0, -1],
+    };
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        if (!e.repeat) window.ui.pause();
+        e.preventDefault();
+        return;
+      }
+      const d = steps[e.code];
+      if (d) window.ui.walk(d[0] * step, d[1] * step, d[2] * step);
+    });
+
+    let drag = null;
+    document.body.addEventListener('mousedown', (e) => {
+      if (bar.contains(e.target)) return;
+      drag = { x: e.clientX, y: e.clientY };
+    });
+    window.addEventListener('mousemove', (e) => {
+      if (!drag) return;
+      const dx = e.clientX - drag.x;
+      const dy = e.clientY - drag.y;
+      drag = { x: e.clientX, y: e.clientY };
+      if (dx || dy) window.ui.turn(-dx * look, -dy * look);
+    });
+    window.addEventListener('mouseup', () => { drag = null; });
+    window.addEventListener('blur', () => { drag = null; });
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+.vscode
+*.exe
+*.exe.gpu
+assets/**
+!assets/**/
+!assets/**/.gitkeep
+!assets/source/sponza-png.glb
+!assets/source/metal-man.glb
+!assets/imported/sponza-png/**
+!assets/imported/metal-man/**
+ui/node_modules/
+out/*
+!out/.gitkeep
